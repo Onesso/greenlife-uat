@@ -364,7 +364,7 @@ function SalesTable() {
         (sale.region_name || '').toLowerCase().includes(search) ||
         (sale.sub_region || '').toLowerCase().includes(search) ||
         (sale.amount ? sale.amount.toString().toLowerCase() : '').includes(search) ||
-        (sale.created_date || '').toLowerCase().includes(search) ||
+        // (sale.created_date || '').toLowerCase().includes(search) ||
         (sale.initial_commission ? sale.initial_commission.toString().toLowerCase() : '').includes(search)
       );
     });
@@ -384,7 +384,7 @@ function SalesTable() {
                 <th>Sub region</th>
                 <th>Amount</th>
                 <th>Created Date</th>
-                <th>Created Time</th>
+                {/* <th>Created Time</th> */}
                 {tabName === 'accepted' && <th>Initial commission</th>}
                 <th>Status</th>
                 <th>Product details</th>
@@ -408,9 +408,9 @@ function SalesTable() {
                     <td data-label="Created Date">
                       {sale.created_date ? sale.created_date.split('T')[0] : 'N/A'}
                     </td>
-                    <td data-label="Created Time">
+                    {/* <td data-label="Created Time">
                       {sale.created_date ? sale.created_date.split('T')[1].split('.')[0] : 'N/A'}
-                    </td>
+                    </td> */}
                     {tabName === 'accepted' && (
                       <td data-label="Initial Commission">{sale.initial_commission || 'N/A'}</td>
                     )}
