@@ -1,59 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
+import React, { useState, useEffect, useRef } from "react";
+import Swal from "sweetalert2";
 import {
   FaUser,
   FaIdBadge,
   FaPhone,
   FaMapMarkerAlt,
   FaToggleOn,
-  FaToggleOff
-} from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-import apiClient from '../apiClient';
-import '../../styles/registeredTables.css';
+  FaToggleOff,
+} from "react-icons/fa";
+import { useSelector } from "react-redux";
+import apiClient from "../apiClient";
+import "../../styles/registeredTables.css";
 
 const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  const [updateError, setUpdateError] = useState('');
+  const [updateError, setUpdateError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isActive, setIsActive] = useState(record?.active || false);
   const [regData, setRegData] = useState({
-    firstName: '',
-    lastName: '',
-    idNumber: '',
-    email: '',
-    phoneNumber: '',
-    subRegion: '',
-    distributor: ''
+    firstName: "",
+    lastName: "",
+    idNumber: "",
+    email: "",
+    phoneNumber: "",
+    subRegion: "",
+    distributor: "",
   });
   const [distributors, setDistributors] = useState([]);
   const [subregions, setSubregions] = useState([]);
 
   const [subOpen, setSubOpen] = useState(false);
-  const [subSearch, setSubSearch] = useState('');
+  const [subSearch, setSubSearch] = useState("");
   const subDropdownRef = useRef(null);
 
   const [distOpen, setDistOpen] = useState(false);
-  const [distSearch, setDistSearch] = useState('');
+  const [distSearch, setDistSearch] = useState("");
   const distDropdownRef = useRef(null);
 
   const fetchDistributors = async () => {
     try {
-      const { data } = await apiClient.get('/distributor/region');
-      setDistributors(data[0]||[]);
+      const { data } = await apiClient.get("/distributor/region");
+      // setDistributors(data[0] || []);
+      const normalized = Array.isArray(data?.[0]) ? data[0] : data;
+      setDistributors(Array.isArray(normalized) ? normalized : []);
     } catch (err) {
       console.error(err);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load distributors.' });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load distributors.",
+      });
+      setDistributors([]);
     }
   };
 
   const fetchSubregions = async () => {
     try {
-      const { data } = await apiClient.get('/subregion/filter');
-      setSubregions(data[0]||[]);
+      const { data } = await apiClient.get("/subregion/filter");
+      // setSubregions(data[0] || []);
+      const normalized = Array.isArray(data?.[0]) ? data[0] : data;
+      setSubregions(Array.isArray(normalized) ? normalized : []);
     } catch (err) {
       console.error(err);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load subregions.' });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load subregions.",
+      });
+      setSubregions([]);
     }
   };
 
@@ -67,28 +81,28 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   useEffect(() => {
     if (record) {
       setRegData({
-        firstName: record.firstName || '',
-        lastName: record.lastName || '',
-        idNumber: record.idNumber || '',
-        email: record.email || '',
-        phoneNumber: record.phoneNumber || '',
-        subRegion: record.subRegion || '',
-        distributor: record.distributor || ''
+        firstName: record.firstName || "",
+        lastName: record.lastName || "",
+        idNumber: record.idNumber || "",
+        email: record.email || "",
+        phoneNumber: record.phoneNumber || "",
+        subRegion: record.subRegion || "",
+        distributor: record.distributor || "",
       });
       setIsActive(record.active);
     }
   }, [record]);
 
-  const distributorOptions = distributors.map(dist => ({
+  const distributorOptions = distributors.map((dist) => ({
     id: dist.id,
     label: dist.businessName,
-    value: dist.businessName
+    value: dist.businessName,
   }));
 
-  const subregionOptions = subregions.map(sub => ({
+  const subregionOptions = subregions.map((sub) => ({
     id: sub.id,
     label: sub.subRegionName,
-    value: sub.subRegionName
+    value: sub.subRegionName,
   }));
 
   const handleChange = (e) => {
@@ -96,7 +110,15 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   };
 
   const validateForm = () => {
-    const { firstName, lastName, idNumber, email, phoneNumber, subRegion, distributor } = regData;
+    const {
+      firstName,
+      lastName,
+      idNumber,
+      email,
+      phoneNumber,
+      subRegion,
+      distributor,
+    } = regData;
     if (
       !firstName.trim() ||
       !lastName.trim() ||
@@ -106,12 +128,12 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
       !subRegion.trim() ||
       !distributor.trim()
     ) {
-      return 'All fields are required.';
+      return "All fields are required.";
     }
-    if (!email.includes('@') || !email.includes('.')) {
-      return 'Please enter a valid email address.';
+    if (!email.includes("@") || !email.includes(".")) {
+      return "Please enter a valid email address.";
     }
-    return '';
+    return "";
   };
 
   // Status toggle handler – after successful update, call onClose and onUpdateSuccess to refresh table
@@ -121,23 +143,35 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     const result = await Swal.fire({
       title: `Confirm ${actionLabel}`,
       text: `Are you sure you want to ${actionLabel.toLowerCase()} this agent?`,
-      icon: 'info',
+      icon: "info",
       showCancelButton: true,
       confirmButtonText: `Yes, ${actionLabel}`,
-      cancelButtonText: 'Cancel'
+      cancelButtonText: "Cancel",
     });
     if (result.isConfirmed) {
       try {
-        const { data: responseText } = await apiClient.put('/agent/status', null, {
-          params: { email: regData.email, active: newStatus }
-        });
+        const { data: responseText } = await apiClient.put(
+          "/agent/status",
+          null,
+          {
+            params: { email: regData.email, active: newStatus },
+          }
+        );
         setIsActive(newStatus);
-        Swal.fire({ icon: 'success', title: 'Status Updated', text: responseText }).then(() => {
+        Swal.fire({
+          icon: "success",
+          title: "Status Updated",
+          text: responseText,
+        }).then(() => {
           onClose();
           if (onUpdateSuccess) onUpdateSuccess();
         });
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Status Update Failed', text: err.response?.data || err.message });
+        Swal.fire({
+          icon: "error",
+          title: "Status Update Failed",
+          text: err.response?.data || err.message,
+        });
       }
     }
   };
@@ -148,24 +182,32 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
     const errorMsg = validateForm();
     if (errorMsg) {
       setUpdateError(errorMsg);
-      Swal.fire({ icon: 'error', title: 'Validation Error', text: errorMsg });
+      Swal.fire({ icon: "error", title: "Validation Error", text: errorMsg });
       return;
     }
-    setUpdateError('');
+    setUpdateError("");
     setIsLoading(true);
     const payload = { ...regData, active: isActive };
     try {
-      const response = await apiClient.put('/agent/update', payload, {
+      const response = await apiClient.put("/agent/update", payload, {
         params: { email: regData.email },
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       });
       const responseText = response.data;
-      Swal.fire({ icon: 'success', title: 'Success', text: responseText }).then(() => {
-        onClose();
-        if (onUpdateSuccess) onUpdateSuccess();
-      });
+      Swal.fire({ icon: "success", title: "Success", text: responseText }).then(
+        () => {
+          onClose();
+          if (onUpdateSuccess) onUpdateSuccess();
+        }
+      );
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data || "An error occurred while updating. Please try again." });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text:
+          err.response?.data ||
+          "An error occurred while updating. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -173,41 +215,50 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
 
   useEffect(() => {
     const handleClickOutsideSub = (e) => {
-      if (subDropdownRef.current && !subDropdownRef.current.contains(e.target)) {
+      if (
+        subDropdownRef.current &&
+        !subDropdownRef.current.contains(e.target)
+      ) {
         setSubOpen(false);
-        setSubSearch('');
+        setSubSearch("");
       }
     };
-    document.addEventListener('mousedown', handleClickOutsideSub);
-    return () => document.removeEventListener('mousedown', handleClickOutsideSub);
+    document.addEventListener("mousedown", handleClickOutsideSub);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutsideSub);
   }, []);
 
   useEffect(() => {
     const handleClickOutsideDist = (e) => {
-      if (distDropdownRef.current && !distDropdownRef.current.contains(e.target)) {
+      if (
+        distDropdownRef.current &&
+        !distDropdownRef.current.contains(e.target)
+      ) {
         setDistOpen(false);
-        setDistSearch('');
+        setDistSearch("");
       }
     };
-    document.addEventListener('mousedown', handleClickOutsideDist);
-    return () => document.removeEventListener('mousedown', handleClickOutsideDist);
+    document.addEventListener("mousedown", handleClickOutsideDist);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutsideDist);
   }, []);
 
   const renderSubRegionDropdown = () => {
-    const filtered = subregionOptions.filter(option =>
+    const filtered = subregionOptions.filter((option) =>
       option.label.toLowerCase().includes(subSearch.toLowerCase())
     );
     return (
       <div className="searchable-dropdown" ref={subDropdownRef}>
         <div className="dropdown-selected" onClick={() => setSubOpen(!subOpen)}>
           {regData.subRegion
-            ? subregionOptions.find(opt => opt.value === regData.subRegion)?.label
-            : 'Select Sub-Region'}
+            ? subregionOptions.find((opt) => opt.value === regData.subRegion)
+                ?.label
+            : "Select Sub-Region"}
           <span className="dropdown-arrow">&#9662;</span>
         </div>
         {subOpen && (
           <div className="dropdown-menu">
-            <input 
+            <input
               type="text"
               className="dropdown-search"
               placeholder="Search..."
@@ -217,12 +268,15 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
             />
             <ul className="dropdown-list">
               {filtered.length > 0 ? (
-                filtered.map(option => (
-                  <li key={option.id} onMouseDown={() => {
-                    setRegData({ ...regData, subRegion: option.value });
-                    setSubOpen(false);
-                    setSubSearch('');
-                  }}>
+                filtered.map((option) => (
+                  <li
+                    key={option.id}
+                    onMouseDown={() => {
+                      setRegData({ ...regData, subRegion: option.value });
+                      setSubOpen(false);
+                      setSubSearch("");
+                    }}
+                  >
                     {option.label}
                   </li>
                 ))
@@ -237,20 +291,25 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
   };
 
   const renderDistributorDropdown = () => {
-    const filtered = distributorOptions.filter(option =>
+    const filtered = distributorOptions.filter((option) =>
       option.label.toLowerCase().includes(distSearch.toLowerCase())
     );
     return (
       <div className="searchable-dropdown" ref={distDropdownRef}>
-        <div className="dropdown-selected" onClick={() => setDistOpen(!distOpen)}>
+        <div
+          className="dropdown-selected"
+          onClick={() => setDistOpen(!distOpen)}
+        >
           {regData.distributor
-            ? distributorOptions.find(opt => opt.value === regData.distributor)?.label
-            : 'Select Distributor'}
+            ? distributorOptions.find(
+                (opt) => opt.value === regData.distributor
+              )?.label
+            : "Select Distributor"}
           <span className="dropdown-arrow">&#9662;</span>
         </div>
         {distOpen && (
           <div className="dropdown-menu">
-            <input 
+            <input
               type="text"
               className="dropdown-search"
               placeholder="Search..."
@@ -260,12 +319,15 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
             />
             <ul className="dropdown-list">
               {filtered.length > 0 ? (
-                filtered.map(option => (
-                  <li key={option.id} onMouseDown={() => {
-                    setRegData({ ...regData, distributor: option.value });
-                    setDistOpen(false);
-                    setDistSearch('');
-                  }}>
+                filtered.map((option) => (
+                  <li
+                    key={option.id}
+                    onMouseDown={() => {
+                      setRegData({ ...regData, distributor: option.value });
+                      setDistOpen(false);
+                      setDistSearch("");
+                    }}
+                  >
                     {option.label}
                   </li>
                 ))
@@ -378,9 +440,9 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
           </div>
         </div>
         <div className="form-row">
-          <button 
-            type="button" 
-            className="submit-btn" 
+          <button
+            type="button"
+            className="submit-btn"
             onClick={handleStatusToggle}
           >
             {isActive ? (
@@ -396,7 +458,7 @@ const AgentsUpdate = ({ record, onClose, onUpdateSuccess }) => {
         </div>
         {updateError && <p className="error-message">{updateError}</p>}
         <button type="submit" className="submit-btn" disabled={isLoading}>
-          {isLoading ? 'Updating...' : 'Update Agent'}
+          {isLoading ? "Updating..." : "Update Agent"}
         </button>
       </form>
     </div>
